@@ -12,18 +12,28 @@ class GT::Lexer
   #
   # Punctuation string hash. Based on Token::PUNCTUATION.
   #
-  PUNCTUATION_STRINGS = Token::PUNCTUATION.invert
+  PUNCTUATION_STRINGS = Token::PUNCTUATION.invert.freeze
 
   #
-  #---
-  # This assumes little endian, so it might be necessary to adjust for big
-  # endian systems.
-  #+++
+  # Marker class -- stores the token index, source index, last character read,
+  # and source position (see: GT::Lexer::Position).
+  #
   @@Marker = Struct.new(:token_index, :source_index, :character, :position)
 
+  #
+  # The array of tokens produced by the lexer.
+  #
   attr_reader :tokens
+
+  #
+  # The last error encountered by the lexer -- a Hash with keys +:code+,
+  # +:description+, and +:position+.
+  #
   attr_reader :error
 
+  #
+  # Returns whether char is a valid hex-digit.
+  #
   def self.isxdigit(char)
     ('0' <= char && char <= '9') ||
     ('a' <= char && char <= 'f') ||
@@ -38,6 +48,9 @@ class GT::Lexer
     reset()
   end
 
+  #
+  # Resets the Lexer's state and clears any accumulated tokens.
+  #
   def reset()
     @error  = nil
     @marker = @@Marker[
@@ -47,8 +60,14 @@ class GT::Lexer
       Position[1, 0] # position
     ]
     @tokens = []
+    self
   end
 
+  #
+  # Lexes the +source+ string until a token with a kind given by +until_token+
+  # is encountered. If +token_count+ is provided, only that many tokens will be
+  # read from the source.
+  #
   def run(source, until_token = :invalid, token_count = nil)
     @at_end = false
     @source = source
@@ -169,18 +188,30 @@ class GT::Lexer
     self
   end
 
+  #
+  # Whether the lexer skips generating tokens for comments.
+  #
   def skip_comments?
     @skip_comments
   end
 
+  #
+  # Sets whether the lexer ignores comments.
+  #
   def skip_comments=(bool)
     @skip_comments = bool
   end
 
+  #
+  # Whether the lexer skips generating tokens for newlines.
+  #
   def skip_newlines?
     @skip_newlines
   end
 
+  #
+  # Sets whether the lexer ignores newlines.
+  #
   def skip_newlines=(bool)
     @skip_newlines = bool
   end
@@ -188,6 +219,10 @@ class GT::Lexer
 
   private
 
+  #
+  # Returns the next character in the source string or nil if there is none.
+  # Does not advance the lexer's position in the source string.
+  #
   def peek_next()
     return nil if @at_end
 
@@ -198,6 +233,10 @@ class GT::Lexer
     end
   end
 
+  #
+  # Returns the next character in the source string and advances the lexer's
+  # position in the string. Returns nil if at the end of the source string.
+  #
   def read_next()
     return nil if @at_end
 
@@ -220,6 +259,10 @@ class GT::Lexer
     @marker.character
   end
 
+  #
+  # Skips whitespace characters (spaces, tabs, and carriage returns). Does not
+  # skip newlines.
+  #
   def skip_whitespace()
     current = @marker.character
     (current = read_next()) while current == ' ' || current == ?\t || current == ?\r
@@ -227,6 +270,10 @@ class GT::Lexer
 
   DOT_TOKENS = [:dot, :double_dot, :triple_top]
 
+  #
+  # Reads a base-2 or base-16 number literal. Base literals are not tied to a
+  # specific type.
+  #
   def read_base_number(token)
     current = read_next()
 
@@ -242,6 +289,10 @@ class GT::Lexer
     token.value = @source[(token.from .. @marker.source_index)]
   end
 
+  #
+  # Reads a number literal, either integer or floating point, with an optional
+  # exponent.
+  #
   def read_number(token)
     current = @marker.character
     is_float = current == ?.
@@ -287,6 +338,9 @@ class GT::Lexer
     token.value = @source[(token.from .. @marker.source_index)]
   end
 
+  #
+  # Reads a word token. May be either a keyword or identifier.
+  #
   def read_word(token)
     while (current = peek_next())
       break unless current == '_' ||
@@ -306,6 +360,18 @@ class GT::Lexer
     end
   end
 
+  #
+  # Reads a string literal. String literals may be delimited by any single
+  # character, though the lexer by default only recognizes strings between
+  # single and double quotes.
+  #
+  # C escape codes are recognized, as well as arbitrary byte sequences (which
+  # get decoded as UTF8) specified by either +\x+ or +\X+. A lowercase +x+ is
+  # limited to two bytes in hexadecimal (a short) while an uppercase +X+ is
+  # limited to four bytes in hexadecimal.
+  #
+  # Any other escaped character produces the escaped letter.
+  #
   def read_string(token)
     opening_char = @marker.character
     token.kind = case opening_char
@@ -383,12 +449,21 @@ class GT::Lexer
     token.value = chars.join('')
   end
 
+  #
+  # Reads a single line comment. Terminates after the first newline character
+  # encountered.
+  #
   def read_line_comment(token)
     token.kind = :line_comment
     read_next() while (current = peek_next()) && current != ?\n
     token.value = @source[token.from .. @marker.source_index] if !@skip_comments
   end
 
+  #
+  # Reads a C-style block comment. Terminates after +*/+ is encountered.
+  #
+  # Block comments may not be nested in any form.
+  #
   def read_block_comment(token)
     token.kind = :block_comment
 
@@ -404,6 +479,11 @@ class GT::Lexer
     token.value = @source[token.from .. @marker.source_index] if !@skip_comments
   end
 
+  #
+  # Raises an error with the given code, error (message), and position in the
+  # source string (line:column). Also assigns the error to the lexer's error
+  # property.
+  #
   def raise_error(code, error, position = nil)
     position ||= @marker.position
     @error = {
