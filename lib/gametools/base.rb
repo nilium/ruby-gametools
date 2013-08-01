@@ -4,7 +4,7 @@ module GT ; end
 
 #
 # Class representation of a base game's initialization and main loop. Includes
-#  overridable methods to handle game / frame logic and rendition, including:
+# overridable methods to handle game / frame logic and rendition, including:
 #
 # [init]            Called on initialization. By default, sets up GLFW event
 #                   callbacks. Any subclass implementation should call its
