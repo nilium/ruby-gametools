@@ -138,7 +138,7 @@ module GT ; end
 # as often as possible depending on the GLFW swap interval. Nothing in the loop
 # works to limit rendition.
 #
-class GT::Base
+class GT::FrameLoop
 
   # The main window assigned to the loop. Must be set before calling #run.
   # Additional windows can be hooked up to receive events by passing them to
@@ -328,4 +328,4 @@ class GT::Base
     terminate if respond_to? :terminate
   end
 
-end # class Base
+end # class FrameLoop
