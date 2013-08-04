@@ -73,10 +73,13 @@ class GT::Cache
 
   #
   # Allocates an object from the cache and returns it. If no cache objects are
-  # available, a new cache object is allocated and returned.
+  # available, a new cache object is allocated and returned. If count is
+  # non-nil, an array of count objects from the cache is returned.
   #
-  def alloc
-    if @objects.empty?
+  def alloc(count = nil)
+    if count
+      Array.new(count) { @objects.pop || __allocate_object__ }
+    elsif @objects.empty?
       __allocate_object__
     else
       @objects.pop
