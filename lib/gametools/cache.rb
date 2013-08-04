@@ -135,18 +135,25 @@ class GT::Cache
   #
   def __infect_object__(instance)
     instance.instance_variable_set(CACHE_IVAR_NAME, self)
+    instance.extend(CacheInstanceMethods)
+  end
 
+
+  #
+  # Instance methods used to extend cache objects.
+  #
+  module CacheInstanceMethods
     #
     # Returns the cache object to its cache.
     #
-    def instance.cache_free
+    def cache_free
       self.gt_temp_cache_source.free self
     end
 
     #
     # Returns the cache this object belongs to.
     #
-    def instance.gt_temp_cache_source
+    def gt_temp_cache_source
       instance_variable_get(CACHE_IVAR_NAME)
     end
   end
