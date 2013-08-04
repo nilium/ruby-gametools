@@ -77,7 +77,12 @@ class GT::Cache
       raise "Double-free on cached object -- this might indicate the object had multiple owners"
     end
     @objects << obj
-    @reinitializer.call(obj) if @reinitializer
+
+    # Only reinitialize an object after it's been returned to the cache. I could
+    # do this on allocation, but that means keeping another ivar on the object
+    # or a list of uninitialized objects, and that's not really worth the
+    # trouble when I can just reinit here and be done with it.
+    @reinitializer.call(obj, *@init_args) if @reinitializer
     self
   end
 
