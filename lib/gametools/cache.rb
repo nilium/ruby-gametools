@@ -25,11 +25,37 @@ class GT::Cache
   # Creates a new cache for the given +klass+. Allocates at least +capacity+
   # objects and initializes them with the provided +init_args+.
   #
-  def initialize(klass, capacity: DEFAULT_CAPACITY, init_args: DEFAULT_INIT_ARGS)
-    temp_self = self
+  # If +cache_array+ is provided, all objects in cache_array are infected with
+  # cache methods and used as the object's default cache objects. This causes
+  # the +capacity+ argument to be ignored.
+  #
+  # The +cache_array+ must respond to #to_a and return an Array or an object
+  # that provides the same interface and functionality as an array. This is to
+  # allow non-arrays to be converted to an array so that their objects can be
+  # infected with the necessary cache methods.
+  #
+  # If more objects are allocated than are available in +cache_array+, new
+  # objects will be allocated as needed.
+  #
+  def initialize(klass,
+                 capacity: DEFAULT_CAPACITY,
+                 init_args: DEFAULT_INIT_ARGS,
+                 cache_array: nil)
     @klass = klass
     @init_args = init_args || DEFAULT_INIT_ARGS
-    @objects = Array.new(capacity) { |i| __allocate_object__ }
+    if cache_array
+      @objects = cache_array.to_a.each do |obj|
+        # Validate the array's contents and infect each object as we go.
+        unless obj.kind_of? klass
+          raise ArgumentError,
+            "Cache array element is a #{obj.type} - must be #{klass}"
+        end
+      end
+
+      @objects.each { |obj| __infect_object__ obj }
+    else
+      @objects = Array.new(capacity) { |i| __allocate_object__ }
+    end
     @reinitializer = nil
   end
 
