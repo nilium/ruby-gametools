@@ -93,23 +93,33 @@ class GT::Cache
   # Allocates a new cache object and returns it.
   #
   def __allocate_object__
-    obj = @klass.new(*@init_args).tap { |instance|
-      instance.instance_variable_set(CACHE_IVAR_NAME, self)
-
-      #
-      # Returns the cache object to its cache.
-      #
-      def instance.cache_free
-        self.gt_temp_cache_source.free self
-      end
-
-      #
-      # Returns the cache this object belongs to.
-      #
-      def instance.gt_temp_cache_source
-        instance_variable_get(CACHE_IVAR_NAME)
-      end
+    @klass.new(*@init_args).tap { |instance|
+      __infect_object__ instance
     }
+  end
+
+  #
+  # Infects an object with the necessary methods and instance variables for it
+  # to work in this cache. Should only be called from #__allocate_object__ and
+  # from #initialize (for infecting existing objects provided via an existing
+  # cache array or array-like object, like a Vec3Array).
+  #
+  def __infect_object__(instance)
+    instance.instance_variable_set(CACHE_IVAR_NAME, self)
+
+    #
+    # Returns the cache object to its cache.
+    #
+    def instance.cache_free
+      self.gt_temp_cache_source.free self
+    end
+
+    #
+    # Returns the cache this object belongs to.
+    #
+    def instance.gt_temp_cache_source
+      instance_variable_get(CACHE_IVAR_NAME)
+    end
   end
 
 end
