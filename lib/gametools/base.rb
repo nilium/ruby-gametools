@@ -3,7 +3,7 @@ require 'glfw3'
 module GT ; end
 
 #
-# Class representation of a base game's initialization and main loop. Includes
+# Class representation of a game's initialization and frame loop. Includes
 # overridable methods to handle game / frame logic and rendition, including:
 #
 # [init]            Called on initialization. By default, sets up GLFW event
@@ -162,8 +162,8 @@ class GT::FrameLoop
   # If you need a frame time to use, it's better to call Glfw::time and subtract
   # the base_time from it.
   attr_reader :frame_time
-  # The base time of the game loop. This is set when #run is called and is used
-  # as the base time for the game loop. To determine an accurate time in
+  # The base time of the frame loop. This is set when #run is called and is used
+  # as the base time for the frame loop. To determine an accurate time in
   # relation to either the simulation_time or frame_time, take the difference
   # of Glfw::time and base_time. For example:
   #
@@ -309,11 +309,11 @@ class GT::FrameLoop
 
       @actual_time = ::Glfw::time - base_time
 
-      # Pre-logic loop and poll for events
+      # Pre-frame code and poll for events
       ::Glfw::poll_events
       pre_frame if respond_to? :pre_frame
 
-      # Logic loop
+      # Inner fixed-step frame loop
       until @simulation_time > @actual_time
         fixed_frame if respond_to? :fixed_frame
         @simulation_time += @frame_hertz
