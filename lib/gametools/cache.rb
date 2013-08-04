@@ -29,7 +29,7 @@ class GT::Cache
     temp_self = self
     @klass = klass
     @init_args = init_args || DEFAULT_INIT_ARGS
-    @objects = Array.new(capacity) { |i| __allocate_obj__ }
+    @objects = Array.new(capacity) { |i| __allocate_object__ }
     @reinitializer = nil
   end
 
@@ -51,7 +51,7 @@ class GT::Cache
   #
   def alloc
     if @objects.empty?
-      __allocate_obj__
+      __allocate_object__
     else
       @objects.pop
     end
@@ -81,7 +81,7 @@ class GT::Cache
   #
   # Allocates a new cache object and returns it.
   #
-  def __allocate_obj__
+  def __allocate_object__
     obj = @klass.new(*@init_args).tap { |instance|
       instance.instance_variable_set(CACHE_IVAR_NAME, self)
 
