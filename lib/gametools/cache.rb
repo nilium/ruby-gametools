@@ -67,7 +67,13 @@ class GT::Cache
   def free(obj)
     if ! obj.gt_temp_cache_source.eql?(self)
       raise "Object does not belong to the cache trying to take it"
-    elsif @objects.any? { |cached| cached.eql?(obj) }
+
+      # NOTE: Use Object#equal? to test if the objects are the same instance --
+      # using any other comparison function (or operator) may return true when
+      # the objects are only equivalent in terms of what they represent. This is
+      # especially true of objects like vectors, strings, and so on that might
+      # be cached and represent equal values.
+    elsif @objects.any? { |cached| cached.equal?(obj) }
       raise "Double-free on cached object -- this might indicate the object had multiple owners"
     end
     @objects << obj
