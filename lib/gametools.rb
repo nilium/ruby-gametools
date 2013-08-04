@@ -1,2 +1,2 @@
 require 'gametools/version'
-require 'gametools/base'
+require 'gametools/frame_loop'
