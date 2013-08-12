@@ -258,7 +258,7 @@ class GT::UniformHash < Hash
   #
   def bind(program, *names)
     if names.empty?
-      self.each_key do |name|
+      program.each_hinted_uniform do |name|
         location = program.uniform_location(name)
         next if location == NO_UNIFORM
         bind_uniform(name, location)
