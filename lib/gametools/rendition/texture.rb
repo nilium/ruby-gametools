@@ -8,7 +8,7 @@ class GT::Texture < Gl::Texture
 
   #
   # call-seq:
-  #   new(file-path, mipmapped = false)
+  #   new(file-path, [mipmapped])
   #
   #
   def initialize(*argv)
@@ -42,6 +42,8 @@ class GT::Texture < Gl::Texture
 
           glTexImage2D(Gl::GL_TEXTURE_2D, 0, format, width, height, 0, format,
             Gl::GL_UNSIGNED_BYTE, data)
+
+          glGenerateMipmap(Gl::GL_TEXTURE_2D) if mipmaps
 
           true
         end
