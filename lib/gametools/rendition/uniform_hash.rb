@@ -260,7 +260,7 @@ class GT::UniformHash < Hash
     if names.empty?
       program.each_hinted_uniform do |name|
         location = program.uniform_location(name)
-        next if location == NO_UNIFORM
+        next unless location != NO_UNIFORM && self.include?(name)
         bind_uniform(name, location)
       end
     else
