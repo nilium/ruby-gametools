@@ -18,8 +18,8 @@ Gem::Specification.new { |s|
       'COPYING'
   ]
   s.add_dependency 'glfw3',       '>= 0.4.4'
-  # s.add_dependency 'opengl-core', '>= 1.3.1'
-  # s.add_dependency 'snow-math',   '>= 1.6.0'
+  s.add_dependency 'opengl-core', '>= 1.3.2'
+  s.add_dependency 'snow-math',   '>= 1.7.1'
+  s.add_dependency 'stb-image',   '>= 1.0.1'
   # s.add_dependency 'snow-data',   '>= 1.3.0'
-  # s.add_dependency 'stb-image',   '>= 1.0.1'
 }
