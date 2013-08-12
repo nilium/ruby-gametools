@@ -168,11 +168,10 @@ class GT::Pass::Builder
   # otherwise uses TextureState defaults.
   #
   # Returns the new TextureState.
-  def map(path, unit: nil, min_filter: nil, mag_filter: nil, x_wrap: nil, y_wrap: nil, z_wrap: nil)
+  def map(path_or_texture, unit: nil, min_filter: nil, mag_filter: nil, x_wrap: nil, y_wrap: nil, z_wrap: nil)
     units = @pass.texture_units
     unit ||= units.length
 
-    gen_mipmaps = min_filter != :linear && min_filter != :nearest
 
     min_filter = self.class.filter_constant(min_filter)
     mag_filter = self.class.filter_constant(mag_filter)
@@ -181,8 +180,15 @@ class GT::Pass::Builder
     y_wrap = self.class.wrap_constant(y_wrap)
     z_wrap = self.class.wrap_constant(z_wrap)
 
+    texture = if path_or_texture.kind_of?(GT::Texture)
+        path_or_texture
+      else
+        gen_mipmaps = min_filter != :linear && min_filter != :nearest
+        GT::Texture.new(path_or_texture.to_s, gen_mipmaps)
+      end
+
     state = GT::Pass::TextureState.new(
-      GT::Texture.new(path, gen_mipmaps),
+      texture,
       min_filter: min_filter,
       mag_filter: mag_filter,
       x_wrap: x_wrap,
