@@ -12,50 +12,50 @@ class GT::Texture < Gl::Texture
   #
   #
   def initialize(*argv)
-    if argv.empty?
-      super()
-      return
-    end
-
-    case argv[0]
-    when String
+    if argv.first.kind_of?(String)
       super(Gl::GL_TEXTURE_2D)
 
       path, mipmaps = argv
       min_filter = mipmaps ? Gl::GL_LINEAR_MIPMAP_LINEAR : Gl::GL_LINEAR
+      @mipmaps = mipmaps
 
-      loaded = open(path, 'r') do |io|
-        STBI.load_image(io) do |data, width, height, components|
+      # Only load the texture on binding
+      @loader = lambda do |;loaded|
+        loaded = open(path, 'r') do |io|
+          STBI.load_image(io) do |data, width, height, components; format|
 
-          format = case components
-                   when 1 then Gl::GL_RED
-                   when 2 then Gl::GL_RG
-                   when 3 then Gl::GL_RGB
-                   when 4 then Gl::GL_RGBA
-                   else raise "Invalid number of components"
-                   end
+            format = case components
+                     when 1 then Gl::GL_RED
+                     when 2 then Gl::GL_RG
+                     when 3 then Gl::GL_RGB
+                     when 4 then Gl::GL_RGBA
+                     else raise "Invalid number of components"
+                     end
 
-          bind(min_filter: min_filter,
-               mag_filter: Gl::GL_LINEAR,
-               x_wrap: Gl::GL_REPEAT,
-               y_wrap: Gl::GL_REPEAT)
+            simple_bind()
 
-          glTexImage2D(Gl::GL_TEXTURE_2D, 0, format, width, height, 0, format,
-            Gl::GL_UNSIGNED_BYTE, data)
+            glTexImage2D(Gl::GL_TEXTURE_2D, 0, format, width, height, 0, format,
+              Gl::GL_UNSIGNED_BYTE, data)
+            data.clear
 
-          glGenerateMipmap(Gl::GL_TEXTURE_2D) if mipmaps
+            glGenerateMipmap(Gl::GL_TEXTURE_2D) if mipmaps
 
-          true
+            true
+          end
         end
+
+        raise "Unable to load image at #{argv[0]}" unless loaded
       end
-
-      raise "Unable to load image at #{argv[0]}" unless loaded
-
     else
       super(*argv)
     end
   end
 
+  def has_mipmaps?
+    @mipmaps
+  end
+
+  alias_method :simple_bind, :bind
   def bind(target = nil,
            min_filter: nil,
            mag_filter: nil,
@@ -63,7 +63,9 @@ class GT::Texture < Gl::Texture
            y_wrap: nil,
            z_wrap: nil)
 
+    needs_init = (self.name || 0) == 0
     super(target ||= self.target)
+    @loader.call if needs_init
 
     # Optionally change the texture's filter parameters
     Gl::glTexParameteri(target, Gl::GL_TEXTURE_MIN_FILTER, min_filter) if min_filter
