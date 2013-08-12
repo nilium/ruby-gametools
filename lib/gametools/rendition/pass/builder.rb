@@ -229,7 +229,7 @@ class GT::Pass::Builder
              when :add, :additive, :screen
                [Gl::GL_SRC_ALPHA, Gl::GL_ONE]
              when :multiply, :modulate
-               [Gl::GL_SRC_ALPHA, Gl::GL_DST_COLOR]
+               [Gl::GL_DST_COLOR, Gl::GL_ONE_MINUS_SRC_ALPHA]
              else
                raise ArgumentError, "Invalid single blend function: #{args[0]}"
              end
