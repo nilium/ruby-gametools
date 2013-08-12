@@ -1,4 +1,5 @@
 require 'gametools/rendition/texture'
+require 'gametools/rendition/uniform_hash'
 require 'opengl-core'
 require 'opengl-core/aux'
 
